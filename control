@@ -1,8 +1,8 @@
-Package: com.34306.jitmenu
-Name: JIT IMGUI MOD MENU
+Package: com.yuchen0614.biwudahui
+Name: BiWuDaHui Mod Menu
 Depends: mobilesubstrate
-Version: 2.0
+Version: 1.0.0
 Architecture: iphoneos-arm
-Description: IMGUI MOD MENU
-Maintainer: Little 34306
-Author: 34306
+Description: Custom ImGui Mod Menu for Unity games with dynamic function hooking
+Maintainer: Yuchen0614 <your@email.com>
+Author: Yuchen0614
