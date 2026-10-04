@@ -1,0 +1,40 @@
+name: Build Mod Menu
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    env:
+      THEOS: ${{ github.workspace }}/theos
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git "${THEOS}"
+
+      - name: Setup iOS SDKs
+        run: |
+          rm -rf "${THEOS}/sdks"
+          git clone https://github.com/theos/sdks.git "${THEOS}/sdks"
+
+      - name: Install ldid
+        run: brew install ldid
+
+      - name: Compile Dylib
+        run: |
+          make clean
+          make FINALPACKAGE=1
+
+      - name: Upload Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: ModMenu-Dylib
+          path: |
+            .theos/obj/**/*.dylib
+            **/*.dylib
