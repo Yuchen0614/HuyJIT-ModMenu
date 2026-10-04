@@ -3,6 +3,7 @@
 #import <MetalKit/MetalKit.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <cstdlib>  // strtoull
 
 // ImGui
 #import "Esp/CaptainHook.h"
@@ -11,7 +12,7 @@
 #import "IMGUI/imgui_impl_metal.h"
 #import "IMGUI/zzz.h"
 
-// 你的 Patch/Hook 定義
+// 你的 Offset/Hook 定義
 #import "5Toubun/NakanoYotsuba.h"
 #import "5Toubun/dobby.h"
 #import "5Toubun/il2cpp.h"
@@ -20,7 +21,7 @@
 #define kHeight [UIScreen mainScreen].bounds.size.height
 #define kScale [UIScreen mainScreen].scale
 
-// ===== 全域狀態變數（替代 Mods struct）=====
+// ===== 全域狀態變數 =====
 static bool g_ShowMenu = false;
 static bool g_AttackEnabled = false;
 static int g_AttackValue = 9999;
@@ -44,7 +45,7 @@ int new_get_attack(void *instance) {
 /*
 // 範例：無限寶石 Hook
 bool new_spend_gems(void *instance, int amount) {
-    if (g_InfiniteGems) return true; // 假裝扣款成功
+    if (g_InfiniteGems) return true;
     return old_spend_gems ? old_spend_gems(instance, amount) : false;
 }
 */
@@ -54,17 +55,18 @@ void initial_setup() {
     // 1. IL2CPP 附著（Unity 遊戲必須）
     Il2CppAttach();
     
-    // 2. 手動 Hook 你的 Offset（不依賴 auto-update）
-    // getRealOffset 會自動處理 ASLR slide
-    void *targetAddr = (void *)getRealOffset(ENCRYPTOFFSET(OFFSET_GET_ATTACK));
+    // 2. 手動 Hook 你的 Offset（正確轉換字串 -> uint64_t -> getRealOffset）
+    uint64_t rawAttackOffset = OFFSET_GET_ATTACK;  // 已在 NakanoYotsuba.h 編譯期轉換
+    void *attackAddr = (void *)getRealOffset(rawAttackOffset);
     
-    if (targetAddr) {
-        DobbyHook(targetAddr, (void *)new_get_attack, (void **)&old_get_attack);
-        // Console log 會在選單開啟後顯示
+    if (attackAddr) {
+        DobbyHook(attackAddr, (void *)new_get_attack, (void **)&old_get_attack);
     }
     
-    // 3. 如果有其他 Hook，在這裡加
-    // DobbyHook((void *)getRealOffset(ENCRYPTOFFSET(OFFSET_SPEND_GEMS)), (void *)new_spend_gems, (void **)&old_spend_gems);
+    // 3. 其他功能同樣模式：
+    // uint64_t rawHealthOffset = OFFSET_GET_HEALTH;
+    // void *healthAddr = (void *)getRealOffset(rawHealthOffset);
+    // if (healthAddr) DobbyHook(healthAddr, ...);
 }
 
 @interface ImGuiDrawView () <MTKViewDelegate>
@@ -86,7 +88,7 @@ void initial_setup() {
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         ImGui::StyleColorsDark();
         
-        // 載入字體（內建 zzz.h 壓縮字體）
+        // 載入字體（支援中文）
         ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(
             (void*)zzz_compressed_data, zzz_compressed_size, 18.0f, NULL, io.Fonts->GetGlyphRangesChineseFull()
         );
@@ -152,7 +154,7 @@ void initial_setup() {
     
     id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
     
-    // 互動控制
+    // 互動控制：選單開啟時攔截觸摸，關閉時穿透
     [self.view setUserInteractionEnabled:g_ShowMenu];
     
     MTLRenderPassDescriptor* renderPassDescriptor = view.currentRenderPassDescriptor;
@@ -167,7 +169,7 @@ void initial_setup() {
         ImFont* font = ImGui::GetFont();
         if (font) font->Scale = 18.0f / font->FontSize;
         
-        // 視窗位置置中
+        // 視窗置中
         ImGui::SetNextWindowPos(ImVec2((view.bounds.size.width - 400) * 0.5f, (view.bounds.size.height - 300) * 0.5f), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
         
@@ -185,7 +187,7 @@ void initial_setup() {
                 if (g_AttackEnabled) {
                     ImGui::Indent();
                     ImGui::SliderInt("攻擊力數值", &g_AttackValue, 1, 999999);
-                    ImGui::Text("Offset: %s", OFFSET_GET_ATTACK);
+                    ImGui::Text("Offset: %s", OFFSET_GET_ATTACK_STR);
                     ImGui::Unindent();
                 }
                 
