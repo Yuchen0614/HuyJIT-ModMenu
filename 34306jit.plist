@@ -2,12 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Filter</key>
-	<dict>
-		<key>Bundles</key>
-		<array>
-			<string>com.garena.game.kgvn</string>
-		</array>
-	</dict>
+    <key>Filter</dict>
+    <dict>
+        <key>Bundles</dict>
+        <array>
+            <string>com.target.game.bundleid</string>  <!-- 替換成目標遊戲 Bundle ID -->
+        </array>
+    </dict>
 </dict>
 </plist>
