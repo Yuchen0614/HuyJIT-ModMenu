@@ -187,7 +187,7 @@ void initial_setup() {
                 if (g_AttackEnabled) {
                     ImGui::Indent();
                     ImGui::SliderInt("攻擊力數值", &g_AttackValue, 1, 999999);
-                    ImGui::Text("Offset: %s", OFFSET_GET_ATTACK_STR);
+                    ImGui::Text("Offset: 0x%llx", OFFSET_GET_ATTACK);  // ✅ 修正：直接格式化 uint64_t
                     ImGui::Unindent();
                 }
                 
